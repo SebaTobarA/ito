@@ -1,0 +1,38 @@
+# ITO — Sistema de Gerenciamiento de Proyectos Inmobiliarios
+
+Aplicación web interna para prestar el servicio de **Inspección Técnica de Obras (ITO) y
+Gerenciamiento de Proyectos Inmobiliarios** en Chile. Reemplaza el control por planilla Excel
+tipo "Plan de Calidad" por un sistema multi-cliente / multi-proyecto con checklist de calidad
+digitalizado, respaldos documentales, cálculo automático de cumplimiento, roles, ciclos de
+revisión y alertas de vencimiento.
+
+> El nombre comercial aún no está definido. En toda la aplicación la marca es **configurable**
+> (nombre, logo, colores, prefijo de codificación de documentos) desde el panel de
+> administración. En el código y los textos por defecto se usa el placeholder `[Tu Empresa]`.
+
+## Estado actual
+
+**Fase de diseño — pendiente de aprobación.** Todavía no se ha escrito código de aplicación.
+La documentación de esta carpeta es la propuesta a confirmar antes de iniciar la Fase 1.
+
+| Documento | Contenido |
+|---|---|
+| [docs/01-ARQUITECTURA.md](docs/01-ARQUITECTURA.md) | Stack tecnológico, decisiones y justificación, despliegue y costos |
+| [docs/02-MODELO-DATOS.md](docs/02-MODELO-DATOS.md) | Entidades, campos, relaciones, permisos y preparación del portal de cliente |
+| [docs/03-ESTRUCTURA-PROYECTO.md](docs/03-ESTRUCTURA-PROYECTO.md) | Estructura de carpetas y convenciones de código |
+| [docs/04-PLAN-FASES.md](docs/04-PLAN-FASES.md) | Plan de implementación por fases con entregables y criterios de aceptación |
+| [docs/05-CHECKLIST-MAESTRO.md](docs/05-CHECKLIST-MAESTRO.md) | Metodología propia: categorías, ítems y esquema de codificación |
+
+## Objetivo de negocio
+
+Herramienta interna que permite:
+
+1. Atender varios clientes (mandantes, inmobiliarias, constructoras) y varios proyectos en
+   paralelo, con un estándar único y auditable.
+2. Demostrar con reportes profesionales que cada proyecto está siendo controlado — parte de lo
+   que justifica el cobro del servicio.
+3. Escalar: incorporar más ITOs trabajando con la misma metodología, supervisables desde un
+   único panel.
+
+Uso **interno exclusivo** en el MVP. El portal de cliente (solo lectura, limitado a sus propios
+proyectos) queda diseñado desde el día uno pero **no se implementa** en esta etapa.

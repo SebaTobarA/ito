@@ -1,0 +1,38 @@
+# Dependencias
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+.next/
+out/
+build/
+dist/
+
+# Entorno — nunca versionar secretos
+.env
+.env.local
+.env*.local
+
+# Almacenamiento local de archivos (desarrollo)
+/almacenamiento
+/uploads
+
+# Registros y caché
+*.log
+npm-debug.log*
+.turbo/
+.vercel/
+tsconfig.tsbuildinfo
+
+# Tests
+coverage/
+/test-results/
+/playwright-report/
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
