@@ -1,3 +1,4 @@
+import { cache } from "react";
 import NextAuth from "next-auth";
 import type { Adapter } from "next-auth/adapters";
 import Credentials from "next-auth/providers/credentials";
@@ -64,21 +65,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 /**
  * Usuario de la sesión actual en el formato que espera el módulo de permisos.
  * Devuelve `null` si no hay sesión.
+ *
+ * La sesión es un JWT: es autocontenido y sobrevive a cambios en la base de
+ * datos. Por eso aquí se vuelve a leer el usuario en cada petición, para que
+ * desactivarlo, cambiarle el rol o eliminarlo tenga efecto inmediato y no dentro
+ * de siete días, cuando expire el token. `cache` de React deduplica la consulta
+ * dentro de un mismo render.
  */
-export async function usuarioActual(): Promise<
+export const usuarioActual = cache(async (): Promise<
   (UsuarioSesion & { email: string; nombreCompleto: string }) | null
-> {
+> => {
   const sesion = await auth();
   if (!sesion?.user?.id) return null;
 
+  const usuario = await prisma.usuario.findUnique({
+    where: { id: sesion.user.id },
+    select: { id: true, email: true, nombre: true, apellido: true, rolGlobal: true, activo: true, clienteId: true },
+  });
+
+  if (!usuario || !usuario.activo) return null;
+
   return {
-    id: sesion.user.id,
-    rolGlobal: sesion.user.rolGlobal,
-    clienteId: sesion.user.clienteId ?? null,
-    email: sesion.user.email ?? "",
-    nombreCompleto: sesion.user.nombreCompleto ?? sesion.user.name ?? "",
+    id: usuario.id,
+    rolGlobal: usuario.rolGlobal,
+    clienteId: usuario.clienteId,
+    email: usuario.email,
+    nombreCompleto: `${usuario.nombre} ${usuario.apellido}`,
   };
-}
+});
 
 /** Igual que `usuarioActual`, pero lanza si no hay sesión. Para Server Actions. */
 export async function exigirSesion() {

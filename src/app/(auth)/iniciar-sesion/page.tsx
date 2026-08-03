@@ -2,12 +2,15 @@ import { redirect } from "next/navigation";
 
 import { usuarioActual } from "@/auth";
 import { obtenerConfiguracionSegura } from "@/server/datos/empresa";
+import { instalacionConfigurada } from "@/server/datos/instalacion";
 import { Logo } from "@/components/marca/logo";
 import { FormularioIngreso } from "./formulario-ingreso";
 
 export const metadata = { title: "Iniciar sesión" };
 
 export default async function PaginaIniciarSesion() {
+  // Instalación recién desplegada: no hay a quién iniciarle sesión todavía.
+  if (!(await instalacionConfigurada())) redirect("/configuracion-inicial");
   if (await usuarioActual()) redirect("/panel");
 
   const empresa = await obtenerConfiguracionSegura();

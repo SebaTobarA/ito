@@ -36,11 +36,16 @@ git push -u origin main
 
    | Variable | Valor |
    |---|---|
-   | `DATABASE_URL` | cadena pooled de Neon + `&pgbouncer=true` |
-   | `DIRECT_URL` | cadena directa de Neon |
    | `AUTH_SECRET` | generar con `openssl rand -base64 32` |
    | `AUTH_TRUST_HOST` | `true` |
    | `ALMACENAMIENTO` | `blob` |
+   | `DATABASE_URL` | cadena pooled de Neon (**solo si no usas la integración Neon de Vercel**) |
+   | `DIRECT_URL` | cadena directa de Neon (ídem) |
+
+   El script de compilación (`scripts/construir.mjs`) reconoce también los nombres que inyecta
+   la integración Neon de Vercel (`DATABASE_URL_UNPOOLED`, `POSTGRES_URL_NON_POOLING`, …) y
+   agrega `pgbouncer=true` cuando detecta una cadena con pool. Si conectas Neon desde la pestaña
+   **Storage** de Vercel, no hace falta configurar ninguna variable de base de datos a mano.
 
    `AUTH_URL` **no** hace falta en Vercel: se deduce del dominio del despliegue.
 
@@ -55,17 +60,17 @@ Si más adelante el volumen crece, se cambia a Cloudflare R2 (sin costo de egres
 `ALMACENAMIENTO=s3` y las variables `S3_*`. La aplicación no cambia: el almacenamiento está
 detrás de un adaptador (`src/lib/almacenamiento/`).
 
-## 5. Carga inicial
+## 5. Configuración inicial
 
-La primera vez hay que crear el usuario administrador y la plantilla del checklist. Desde el
-equipo local, apuntando a la base de producción:
+**No hay que ejecutar ningún comando contra la base de producción.** Al abrir la URL del
+despliegue por primera vez, la aplicación detecta que no existe ningún usuario y muestra la
+pantalla de configuración inicial: ahí defines el nombre de tu empresa, su sigla, el prefijo de
+codificación y creas tu propia cuenta de administrador con tu contraseña.
 
-```bash
-DATABASE_URL="<cadena pooled de Neon>" DIRECT_URL="<cadena directa>" npm run db:seed
-```
+Esa pantalla se cierra sola en cuanto existe el primer usuario, y nunca hay una contraseña por
+defecto en un sitio público.
 
-Ingresar con `admin@tuempresa.cl` / `Admin.2026` y **cambiar la contraseña de inmediato** en
-Administración → Usuarios.
+La plantilla del checklist (20 categorías, 99 registros) se crea en el mismo paso.
 
 ## 6. Dominio propio (opcional, cuando definas la marca)
 

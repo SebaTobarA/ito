@@ -1,15 +1,20 @@
 /**
- * Carga inicial de la base de datos.
+ * Carga inicial por línea de comandos.
  *
- * Es idempotente: se puede ejecutar varias veces sin duplicar datos.
+ * Alternativa a la configuración inicial desde el navegador (/configuracion-inicial),
+ * útil para entornos de desarrollo. Es idempotente: se puede ejecutar varias veces.
+ *
  *   npm run db:seed
  */
 
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-import { PLANTILLA_MAESTRA_V1, TOTAL_ITEMS_PLANTILLA_V1 } from "./plantilla-maestra";
-import { generarCodigoRegistro } from "../../src/dominio/codificacion";
+import {
+  crearPlantillaInicial,
+  TOTAL_CATEGORIAS_PLANTILLA_V1,
+  TOTAL_ITEMS_PLANTILLA_V1,
+} from "../../src/server/servicios/plantilla-inicial";
 
 const prisma = new PrismaClient();
 
@@ -23,10 +28,9 @@ async function main() {
     update: {},
     create: { id: "singleton" },
   });
-  console.log(`  Empresa: ${configuracion.nombreEmpresa} (prefijo ${configuracion.prefijoDocumentos})`);
+  console.log(`  ${configuracion.nombreEmpresa} (prefijo ${configuracion.prefijoDocumentos})`);
 
   console.log("→ Usuario administrador…");
-  const passwordHash = await bcrypt.hash(PASSWORD_ADMIN, 10);
   const admin = await prisma.usuario.upsert({
     where: { email: EMAIL_ADMIN },
     update: { rolGlobal: "ADMIN", activo: true },
@@ -36,66 +40,22 @@ async function main() {
       apellido: "General",
       cargo: "Inspector Técnico de Obras",
       rolGlobal: "ADMIN",
-      passwordHash,
+      passwordHash: await bcrypt.hash(PASSWORD_ADMIN, 10),
     },
   });
   console.log(`  ${admin.email}`);
 
   console.log("→ Plantilla maestra del checklist…");
-  const yaExiste = await prisma.plantillaChecklist.findFirst({ where: { version: 1 } });
-
-  if (yaExiste) {
-    console.log("  La plantilla v1 ya existe; no se vuelve a crear.");
-  } else {
-    const plantilla = await prisma.plantillaChecklist.create({
-      data: {
-        nombre: `Metodología ${configuracion.nombreEmpresa} — Edificación`,
-        version: 1,
-        descripcion:
-          "Plantilla base de control de calidad para proyectos de edificación. Editable desde Administración → Plantillas.",
-        esActiva: true,
-        publicadaAt: new Date(),
-      },
-    });
-
-    for (const [indiceCategoria, categoria] of PLANTILLA_MAESTRA_V1.entries()) {
-      const categoriaCreada = await prisma.categoriaPlantilla.create({
-        data: {
-          plantillaId: plantilla.id,
-          codigo: categoria.codigo,
-          nombre: categoria.nombre,
-          descripcion: categoria.descripcion,
-          orden: indiceCategoria,
-        },
-      });
-
-      await prisma.itemPlantilla.createMany({
-        data: categoria.items.map((item, indiceItem) => ({
-          categoriaId: categoriaCreada.id,
-          codigo: item.codigo,
-          descripcion: item.descripcion,
-          codigoRegistro: generarCodigoRegistro(configuracion.formatoCodigoRegistro, {
-            prefijo: configuracion.prefijoDocumentos,
-            codigoCategoria: categoria.codigo,
-            codigoItem: item.codigo,
-          }),
-          subgrupo: item.subgrupo,
-          instrucciones: item.instrucciones,
-          frecuencia: item.frecuencia,
-          responsableRol: item.responsableRol,
-          revisorRol: item.revisorRol,
-          requiereRespaldoDigital: item.requiereRespaldoDigital,
-          requiereRespaldoFisico: item.requiereRespaldoFisico,
-          controlaVencimiento: item.controlaVencimiento ?? false,
-          orden: indiceItem,
-        })),
-      });
-    }
-
-    console.log(
-      `  ${PLANTILLA_MAESTRA_V1.length} categorías y ${TOTAL_ITEMS_PLANTILLA_V1} ítems creados.`,
-    );
-  }
+  const { creada } = await crearPlantillaInicial(prisma, {
+    nombreEmpresa: configuracion.nombreEmpresa,
+    prefijoDocumentos: configuracion.prefijoDocumentos,
+    formatoCodigoRegistro: configuracion.formatoCodigoRegistro,
+  });
+  console.log(
+    creada
+      ? `  ${TOTAL_CATEGORIAS_PLANTILLA_V1} categorías y ${TOTAL_ITEMS_PLANTILLA_V1} ítems creados.`
+      : "  La plantilla v1 ya existe; no se vuelve a crear.",
+  );
 
   console.log("\n✓ Carga inicial completa.");
   console.log(`  Ingresa con  ${EMAIL_ADMIN}  /  ${PASSWORD_ADMIN}`);

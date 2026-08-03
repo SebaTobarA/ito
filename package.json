@@ -5,7 +5,7 @@
   "description": "Sistema de Gerenciamiento de Proyectos Inmobiliarios e Inspección Técnica de Obras",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "node scripts/construir.mjs",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",

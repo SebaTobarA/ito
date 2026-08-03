@@ -8,7 +8,11 @@
  * solo define el punto de partida de una instalación nueva.
  */
 
-import type { Frecuencia, Requisito, RolProyecto } from "@prisma/client";
+import type { Frecuencia, Prisma, PrismaClient, Requisito, RolProyecto } from "@prisma/client";
+
+import { generarCodigoRegistro } from "@/dominio/codificacion";
+
+type ClientePrisma = Prisma.TransactionClient | PrismaClient;
 
 // Abreviaturas para que las tablas se lean igual que en la documentación.
 const INI: Frecuencia = "INICIO_PROYECTO";
@@ -491,3 +495,69 @@ export const TOTAL_ITEMS_PLANTILLA_V1 = PLANTILLA_MAESTRA_V1.reduce(
   (total, categoria) => total + categoria.items.length,
   0,
 );
+
+export const TOTAL_CATEGORIAS_PLANTILLA_V1 = PLANTILLA_MAESTRA_V1.length;
+
+/**
+ * Crea la plantilla v1 en la base de datos.
+ *
+ * La usan tanto la carga inicial por línea de comandos (`npm run db:seed`) como
+ * la configuración inicial desde el navegador, para que ambas produzcan
+ * exactamente la misma plantilla.
+ *
+ * Es idempotente: si ya existe una plantilla versión 1, no hace nada.
+ */
+export async function crearPlantillaInicial(
+  db: ClientePrisma,
+  opciones: { nombreEmpresa: string; prefijoDocumentos: string; formatoCodigoRegistro: string },
+) {
+  const existente = await db.plantillaChecklist.findFirst({ where: { version: 1 } });
+  if (existente) return { plantilla: existente, creada: false };
+
+  const plantilla = await db.plantillaChecklist.create({
+    data: {
+      nombre: `Metodología ${opciones.nombreEmpresa} — Edificación`,
+      version: 1,
+      descripcion:
+        "Plantilla base de control de calidad para proyectos de edificación. Editable desde Administración → Plantillas.",
+      esActiva: true,
+      publicadaAt: new Date(),
+    },
+  });
+
+  for (const [indiceCategoria, categoria] of PLANTILLA_MAESTRA_V1.entries()) {
+    const categoriaCreada = await db.categoriaPlantilla.create({
+      data: {
+        plantillaId: plantilla.id,
+        codigo: categoria.codigo,
+        nombre: categoria.nombre,
+        descripcion: categoria.descripcion,
+        orden: indiceCategoria,
+      },
+    });
+
+    await db.itemPlantilla.createMany({
+      data: categoria.items.map((item, indiceItem) => ({
+        categoriaId: categoriaCreada.id,
+        codigo: item.codigo,
+        descripcion: item.descripcion,
+        codigoRegistro: generarCodigoRegistro(opciones.formatoCodigoRegistro, {
+          prefijo: opciones.prefijoDocumentos,
+          codigoCategoria: categoria.codigo,
+          codigoItem: item.codigo,
+        }),
+        subgrupo: item.subgrupo,
+        instrucciones: item.instrucciones,
+        frecuencia: item.frecuencia,
+        responsableRol: item.responsableRol,
+        revisorRol: item.revisorRol,
+        requiereRespaldoDigital: item.requiereRespaldoDigital,
+        requiereRespaldoFisico: item.requiereRespaldoFisico,
+        controlaVencimiento: item.controlaVencimiento ?? false,
+        orden: indiceItem,
+      })),
+    });
+  }
+
+  return { plantilla, creada: true };
+}

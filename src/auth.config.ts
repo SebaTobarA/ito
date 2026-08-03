@@ -25,6 +25,7 @@ export const authConfig = {
 
       const esRutaPublica =
         ruta === "/iniciar-sesion" ||
+        ruta === "/configuracion-inicial" ||
         ruta.startsWith("/api/auth") ||
         ruta.startsWith("/_next") ||
         ruta === "/manifest.webmanifest" ||
