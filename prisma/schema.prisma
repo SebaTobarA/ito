@@ -11,7 +11,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Conexión de la aplicación: la cadena con pool (`-pooler` en Neon).
   url      = env("DATABASE_URL")
+  // Conexión directa, sin pool: la usan las migraciones, que necesitan una
+  // sesión estable. En local puede ser la misma cadena sin `pgbouncer=true`.
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================================================
