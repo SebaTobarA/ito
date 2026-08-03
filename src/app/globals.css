@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/*
+ * Marca configurable.
+ *
+ * Estos valores se sobrescriben en tiempo de ejecución desde el layout raíz con
+ * lo guardado en Administración → Empresa, de modo que cambiar los colores de la
+ * marca no requiere tocar código ni recompilar.
+ */
+:root {
+  --marca-primario: #1e3a5f;
+  --marca-secundario: #2d6a9f;
+  --marca-acento: #e08b2c;
+
+  --fondo: #f6f7f9;
+  --superficie: #ffffff;
+  --borde: #e2e5ea;
+  --texto: #16202c;
+  --texto-suave: #61707f;
+}
+
+@theme inline {
+  --color-marca: var(--marca-primario);
+  --color-marca-2: var(--marca-secundario);
+  --color-acento: var(--marca-acento);
+
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-borde: var(--borde);
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background-color: var(--fondo);
+  color: var(--texto);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Evita el zoom automático de iOS al enfocar un campo en terreno. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Semáforo de cumplimiento — mismo criterio que src/dominio/cumplimiento.ts */
+.nivel-optimo {
+  color: #15803d;
+  background-color: #dcfce7;
+}
+.nivel-aceptable {
+  color: #a16207;
+  background-color: #fef9c3;
+}
+.nivel-bajo {
+  color: #c2410c;
+  background-color: #ffedd5;
+}
+.nivel-critico {
+  color: #b91c1c;
+  background-color: #fee2e2;
+}
+.nivel-sin_datos {
+  color: #4b5563;
+  background-color: #f3f4f6;
+}

@@ -12,8 +12,30 @@ revisión y alertas de vencimiento.
 
 ## Estado actual
 
-**Fase de diseño — pendiente de aprobación.** Todavía no se ha escrito código de aplicación.
-La documentación de esta carpeta es la propuesta a confirmar antes de iniciar la Fase 1.
+**Fase 1 completa.** La aplicación compila, corre y está verificada contra una base de datos
+real: autenticación con roles, panel de marca configurable, CRUD de clientes y proyectos,
+plantilla maestra versionada del checklist y clonado automático al crear un proyecto
+(20 categorías, 99 registros).
+
+Las fases 2 a 5 (checklist operativo, ciclos de revisión, alertas y reportes) están planificadas
+en [docs/04-PLAN-FASES.md](docs/04-PLAN-FASES.md).
+
+## Puesta en marcha
+
+```bash
+npm install
+cp .env.example .env          # completar DATABASE_URL y AUTH_SECRET
+npm run db:migrate            # crear las tablas
+npm run db:seed               # admin + configuración + plantilla v1
+npm run dev                   # http://localhost:3000
+```
+
+Credenciales iniciales: `admin@tuempresa.cl` / `Admin.2026` (cambiar al primer ingreso).
+
+Si no tienes PostgreSQL instalado, `npx prisma dev -n ito -d` levanta uno local; recuerda
+agregar `&pgbouncer=true` al `DATABASE_URL`. Detalles en [CLAUDE.md](CLAUDE.md).
+
+## Documentación
 
 | Documento | Contenido |
 |---|---|
