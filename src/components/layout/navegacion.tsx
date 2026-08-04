@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  Tags,
   Users,
   X,
 } from "lucide-react";
@@ -33,6 +34,7 @@ const ICONOS = {
   alertas: Bell,
   usuarios: Users,
   plantillas: ListChecks,
+  catalogos: Tags,
   empresa: Settings,
 } as const;
 

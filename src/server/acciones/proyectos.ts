@@ -14,6 +14,7 @@ import {
   ErrorSinPlantillaActiva,
   obtenerPlantillaActiva,
 } from "@/server/servicios/clonar-plantilla";
+import { clonarPlanificacionEnProyecto } from "@/server/servicios/clonar-planificacion";
 import { recalcularCumplimientoProyecto } from "@/server/servicios/recalcular-cumplimiento";
 import { aResultadoDeError, type ResultadoAccion } from "./resultado";
 
@@ -85,6 +86,14 @@ export async function crearProyecto(
           },
           tx,
         );
+
+        // La guía de planificación nace con el proyecto: la matriz de
+        // responsabilidades se clona de la misma versión de la plantilla que el
+        // checklist, y los servicios quedan listos para marcarse.
+        await clonarPlanificacionEnProyecto(tx, {
+          proyectoId: creado.id,
+          plantillaId: plantilla.id,
+        });
 
         await recalcularCumplimientoProyecto(creado.id, tx);
 

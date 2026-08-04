@@ -58,7 +58,7 @@ export async function actualizarItem(
 
     // Solo llegan los campos que el formulario envió: quien cambia el estado de
     // cumplimiento no reenvía la frecuencia ni las observaciones.
-    const enviados = aObjeto(datos, datos.has("aplica") ? ["aplica"] : []);
+    const enviados = aObjeto(datos, ["aplica"]);
     const valores = esquemaEdicionItem.parse(enviados);
 
     const cambios: Record<string, unknown> = { ...valores };

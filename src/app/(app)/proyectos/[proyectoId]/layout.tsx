@@ -6,6 +6,7 @@ import { usuarioActual } from "@/auth";
 import { puede } from "@/lib/permisos";
 import { prisma } from "@/lib/prisma";
 import { contextoProyecto, filtroProyectos } from "@/server/datos/alcance";
+import { obtenerModulosDelProyecto } from "@/server/datos/planificacion";
 import { EncabezadoPagina } from "@/components/layout/encabezado-pagina";
 import { Boton } from "@/components/ui/boton";
 import {
@@ -45,10 +46,24 @@ export default async function LayoutProyecto({
   const contexto = await contextoProyecto(usuario, proyectoId);
   const puedeEditar = puede(usuario, "proyecto.editar", contexto ?? {});
 
-  const pestanas: PestanaProyecto[] = [
-    { href: `/proyectos/${proyecto.id}`, etiqueta: "Ficha" },
-    { href: `/proyectos/${proyecto.id}/checklist`, etiqueta: "Checklist" },
-  ];
+  /*
+   * Las pestañas dependen de lo contratado: `modulosActivos` traduce los
+   * servicios de la guía de planificación a secciones visibles. Los módulos de
+   * las fases 4 a 6 se enganchan aquí sin tocar nada más.
+   */
+  const modulos = await obtenerModulosDelProyecto(proyectoId);
+
+  const pestanas: PestanaProyecto[] = [{ href: `/proyectos/${proyecto.id}`, etiqueta: "Ficha" }];
+
+  if (puede(usuario, "planificacion.ver", contexto ?? {})) {
+    pestanas.push({
+      href: `/proyectos/${proyecto.id}/planificacion`,
+      etiqueta: "Planificación",
+    });
+  }
+  if (modulos.includes("checklist")) {
+    pestanas.push({ href: `/proyectos/${proyecto.id}/checklist`, etiqueta: "Checklist" });
+  }
 
   return (
     <>

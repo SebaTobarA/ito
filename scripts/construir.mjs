@@ -84,6 +84,11 @@ console.log(
 const pasos = [
   ["npx", ["prisma", "generate"]],
   ["npx", ["prisma", "migrate", "deploy"]],
+  // Los catálogos configurables se crean en la configuración inicial. Una
+  // instalación anterior a la Fase 3 ya pasó por ahí, así que sin este paso
+  // quedaría con las tablas nuevas vacías y la guía de planificación sin
+  // servicios que ofrecer. Es idempotente y no aborta el despliegue.
+  ["npx", ["tsx", "scripts/asegurar-catalogos.ts"]],
   ["npx", ["next", "build"]],
 ];
 

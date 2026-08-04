@@ -114,6 +114,9 @@ export function ItemChecklist({
                 el respaldo digital como Sí. Sin la key, el control seguiría
                 mostrando el valor viejo hasta recargar la página.
               */}
+              {/* Acompaña al checkbox para que el campo viaje incluso desmarcado
+                  (ver `aObjeto`). Va antes: se toma el último valor. */}
+              <input type="hidden" name="aplica" value="false" />
               <input
                 key={`aplica-${item.aplica}`}
                 type="checkbox"

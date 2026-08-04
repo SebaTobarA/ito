@@ -62,9 +62,20 @@ Levanta un Postgres local y devuelve la cadena de conexión. **Agregar `&pgbounc
 - **Fase 2 — completa**: checklist operativo con filtros y edición campo a campo, acciones
   masivas por categoría, ítems a medida, respaldos documentales versionados con descarga
   verificada por permisos, y PWA instalable con marca dinámica.
-- **Fases 3 a 8**: ver [`docs/04-PLAN-FASES.md`](docs/04-PLAN-FASES.md). El diseño de las fases
-  3 a 6 (planificación, registros operativos, curva de avance, UF e informe ejecutivo) está en
+- **Fase 3 — completa**: catálogos configurables (especialidades, servicios, tipos de proyecto,
+  estados, causas, cargos y recursos), guía de planificación por proyecto con servicios
+  contratados, enfoque, dedicación del equipo y matriz de responsabilidades clonada de la
+  plantilla versionada. Los servicios contratados deciden qué módulos ve el equipo.
+- **Fases 4 a 8**: ver [`docs/04-PLAN-FASES.md`](docs/04-PLAN-FASES.md). El diseño de las fases
+  4 a 6 (registros operativos, curva de avance, UF e informe ejecutivo) está en
   [`docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md`](docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md).
+
+## Formularios que guardan campo a campo
+
+Un checkbox desmarcado **no viaja** en el `FormData`, lo que es indistinguible de «este campo no
+venía». Por eso cada checkbox va acompañado de un `<input type="hidden">` con el mismo nombre y
+valor `false`, declarado **antes**: `aObjeto` toma el último valor. Sin ese oculto, desmarcar la
+casilla no se guarda nunca.
 
 La UF es la unidad de cuenta: los montos se guardan en UF y los pesos se calculan al mostrar.
 Solo los pagos ya liquidados congelan su equivalente en pesos.

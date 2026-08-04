@@ -21,7 +21,11 @@ revisión y alertas de vencimiento.
   registros a medida, respaldos documentales versionados con descarga verificada por permisos,
   y aplicación instalable en el celular.
 
-Las fases 3 a 8 están planificadas en [docs/04-PLAN-FASES.md](docs/04-PLAN-FASES.md); el diseño
+- **Fase 3**: catálogos configurables desde el panel y guía de planificación por proyecto —
+  servicios contratados, enfoque del servicio, dedicación del equipo y matriz de
+  responsabilidades. Lo contratado decide qué módulos ve el equipo en cada obra.
+
+Las fases 4 a 8 están planificadas en [docs/04-PLAN-FASES.md](docs/04-PLAN-FASES.md); el diseño
 del motor de informe ejecutivo está en
 [docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md](docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md).
 

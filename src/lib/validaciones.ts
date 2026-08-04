@@ -271,6 +271,79 @@ export const esquemaAccionMasiva = z.object({
   responsableUsuarioId: textoNullable.optional(),
 });
 
+// ------------------------------------------------- Catálogos configurables
+
+const TIPOS_CATALOGO = [
+  "TIPO_PROYECTO",
+  "ESTADO_DOCUMENTO",
+  "CAUSA_NO_CUMPLIMIENTO",
+  "TIPO_SERVICIO",
+  "CARGO_EQUIPO",
+  "RECURSO_TERRENO",
+] as const;
+
+/**
+ * El código identifica la opción en el código de la aplicación (por ejemplo,
+ * `dominio/planificacion.ts` decide por él qué módulos se activan), así que se
+ * restringe a mayúsculas, dígitos y guion bajo.
+ */
+const codigoCatalogo = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .min(2, "El código es obligatorio")
+  .max(30, "Máximo 30 caracteres")
+  .regex(/^[A-Z0-9_]+$/, "Solo mayúsculas, números y guion bajo");
+
+export const esquemaOpcionCatalogo = z.object({
+  tipo: z.enum(TIPOS_CATALOGO),
+  codigo: codigoCatalogo,
+  etiqueta: z.string().trim().min(2, "El nombre visible es obligatorio").max(80),
+  orden: z.coerce.number().int().min(0).default(0),
+  activa: z.coerce.boolean().default(true),
+});
+
+export const esquemaEspecialidad = z.object({
+  codigo: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .min(2, "La sigla es obligatoria")
+    .max(6, "Máximo 6 caracteres")
+    .regex(/^[A-Z0-9]+$/, "Solo mayúsculas y números"),
+  nombre: z.string().trim().min(2, "El nombre es obligatorio").max(60),
+  orden: z.coerce.number().int().min(0).default(0),
+  activa: z.coerce.boolean().default(true),
+});
+
+// ------------------------------------------------- Guía de planificación
+
+export const esquemaServicioContratado = z.object({
+  aplica: z.coerce.boolean().optional(),
+  fechaInicio: fechaNullable.optional(),
+  fechaTermino: fechaNullable.optional(),
+  comentario: textoNullable.optional(),
+});
+
+export const esquemaResponsabilidadProyecto = z.object({
+  aplica: z.coerce.boolean().optional(),
+  responsableUsuarioId: textoNullable.optional(),
+  itemProyectoId: textoNullable.optional(),
+  requerimientoCliente: textoNullable.optional(),
+  observaciones: textoNullable.optional(),
+});
+
+export const esquemaEnfoqueServicio = z.object({
+  enfoqueServicio: textoNullable,
+});
+
+export const esquemaDedicacionEquipo = z.object({
+  asignacionId: z.string().min(1),
+  dedicacion: z
+    .enum(["TOTAL", "PARCIAL", "VISITAS", ""])
+    .transform((valor) => (valor === "" ? null : valor)),
+});
+
 /** Convierte los errores de Zod al formato { campo: mensaje } que usan los formularios. */
 export function erroresDeCampo(error: z.ZodError): Record<string, string> {
   const errores: Record<string, string> = {};
@@ -281,7 +354,20 @@ export function erroresDeCampo(error: z.ZodError): Record<string, string> {
   return errores;
 }
 
-/** Lee un FormData como objeto plano, tratando los checkbox no marcados como false. */
+/**
+ * Lee un FormData como objeto plano.
+ *
+ * Los campos booleanos necesitan cuidado especial: **un checkbox desmarcado no
+ * se envía**. En un formulario que guarda campo a campo eso es indistinguible
+ * de «este campo no venía», y desmarcar una casilla nunca se guardaría.
+ *
+ * La convención del proyecto es acompañar cada checkbox de un input oculto con
+ * el mismo nombre y valor `false`, declarado ANTES. Así el campo siempre viaja:
+ * desmarcado llega solo el `false`, y marcado llegan ambos. Por eso aquí se
+ * toma el **último** valor, que es el del checkbox.
+ *
+ * Si el campo no viene del todo, se deja ausente para que Prisma no lo toque.
+ */
 export function aObjeto(datos: FormData, camposBooleanos: string[] = []): Record<string, unknown> {
   const objeto: Record<string, unknown> = {};
   for (const [clave, valor] of datos.entries()) {
@@ -289,7 +375,13 @@ export function aObjeto(datos: FormData, camposBooleanos: string[] = []): Record
     objeto[clave] = valor;
   }
   for (const campo of camposBooleanos) {
-    objeto[campo] = datos.get(campo) === "on" || datos.get(campo) === "true";
+    if (!datos.has(campo)) {
+      delete objeto[campo];
+      continue;
+    }
+    const valores = datos.getAll(campo);
+    const ultimo = valores[valores.length - 1];
+    objeto[campo] = ultimo === "on" || ultimo === "true";
   }
   return objeto;
 }

@@ -26,6 +26,9 @@ export default async function LayoutAplicacion({ children }: { children: React.R
   if (puede(usuario, "plantilla.gestionar")) {
     entradasAdmin.push({ href: "/admin/plantillas", etiqueta: "Plantillas", icono: "plantillas" });
   }
+  if (puede(usuario, "catalogo.gestionar")) {
+    entradasAdmin.push({ href: "/admin/catalogos", etiqueta: "Catálogos", icono: "catalogos" });
+  }
   if (puede(usuario, "empresa.configurar")) {
     entradasAdmin.push({ href: "/admin/empresa", etiqueta: "Empresa", icono: "empresa" });
   }

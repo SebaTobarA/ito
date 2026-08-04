@@ -44,9 +44,13 @@ export type Accion =
   | "ciclo.crear"
   | "ciclo.aprobarJefatura"
   | "ciclo.aprobarSuperior"
+  // Guía de planificación
+  | "planificacion.ver"
+  | "planificacion.editar"
   // Administración
   | "usuario.gestionar"
   | "plantilla.gestionar"
+  | "catalogo.gestionar"
   | "empresa.configurar"
   | "auditoria.ver"
   | "reporte.exportar";
@@ -88,6 +92,8 @@ const ACCIONES_POR_ROL_GLOBAL: Record<RolGlobal, Accion[] | "todas"> = {
     "ciclo.crear",
     "ciclo.aprobarJefatura",
     "ciclo.aprobarSuperior",
+    "planificacion.ver",
+    "planificacion.editar",
     "auditoria.ver",
     "reporte.exportar",
   ],
@@ -105,6 +111,8 @@ const ACCIONES_POR_ROL_GLOBAL: Record<RolGlobal, Accion[] | "todas"> = {
     "ciclo.ver",
     "ciclo.crear",
     "ciclo.aprobarJefatura",
+    "planificacion.ver",
+    "planificacion.editar",
     "auditoria.ver",
     "reporte.exportar",
   ],
@@ -117,10 +125,20 @@ const ACCIONES_POR_ROL_GLOBAL: Record<RolGlobal, Accion[] | "todas"> = {
     "documento.ver",
     "documento.subir",
     "ciclo.ver",
+    // El ITO consulta la guía de planificación para saber qué le toca, pero no
+    // la define: es un acuerdo con el mandante, no una decisión de terreno.
+    "planificacion.ver",
     "reporte.exportar",
   ],
   // PORTAL DE CLIENTE (aún sin uso): solo lectura, y solo de sus propios proyectos.
-  CLIENTE: ["proyecto.ver", "item.ver", "documento.ver", "ciclo.ver", "reporte.exportar"],
+  CLIENTE: [
+    "proyecto.ver",
+    "item.ver",
+    "documento.ver",
+    "ciclo.ver",
+    "planificacion.ver",
+    "reporte.exportar",
+  ],
 };
 
 /**
@@ -210,6 +228,8 @@ const ACCIONES_DE_PROYECTO: Accion[] = [
   "ciclo.crear",
   "ciclo.aprobarJefatura",
   "ciclo.aprobarSuperior",
+  "planificacion.ver",
+  "planificacion.editar",
   "reporte.exportar",
 ];
 
