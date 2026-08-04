@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { ListChecks, Plus } from "lucide-react";
 
 import { usuarioActual } from "@/auth";
 import { puede } from "@/lib/permisos";
@@ -73,10 +73,9 @@ export default async function PaginaProyectos() {
             const jefe = proyecto.asignaciones.find((a) => a.rol === "JEFE_PROYECTO");
 
             return (
-              <Link
+              <div
                 key={proyecto.id}
-                href={`/proyectos/${proyecto.id}`}
-                className="block rounded-xl border border-borde bg-superficie p-4 shadow-sm transition-shadow hover:shadow-md"
+                className="rounded-xl border border-borde bg-superficie p-4 shadow-sm transition-shadow hover:shadow-md"
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0 flex-1">
@@ -88,7 +87,14 @@ export default async function PaginaProyectos() {
                         {ETIQUETAS_ESTADO_PROYECTO[proyecto.estado]}
                       </Insignia>
                     </div>
-                    <p className="mt-1.5 truncate font-semibold text-texto">{proyecto.nombre}</p>
+                    {/* El título es el enlace, no la tarjeta entera: así el acceso
+                        directo al checklist puede ser otro enlace sin anidarlos. */}
+                    <Link
+                      href={`/proyectos/${proyecto.id}`}
+                      className="mt-1.5 block truncate font-semibold text-texto hover:underline"
+                    >
+                      {proyecto.nombre}
+                    </Link>
                     <p className="truncate text-sm text-texto-suave">
                       {proyecto.cliente.nombre}
                       {proyecto.comuna ? ` · ${proyecto.comuna}` : ""}
@@ -121,9 +127,20 @@ export default async function PaginaProyectos() {
                       }
                       umbralBajo={empresa.umbralCumplimientoBajo}
                     />
+                    <div className="mt-2 flex gap-2">
+                      <Boton variante="secundario" tamano="sm" className="flex-1" asChild>
+                        <Link href={`/proyectos/${proyecto.id}`}>Ficha</Link>
+                      </Boton>
+                      <Boton variante="secundario" tamano="sm" className="flex-1" asChild>
+                        <Link href={`/proyectos/${proyecto.id}/checklist`}>
+                          <ListChecks className="h-3.5 w-3.5" />
+                          Checklist
+                        </Link>
+                      </Boton>
+                    </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

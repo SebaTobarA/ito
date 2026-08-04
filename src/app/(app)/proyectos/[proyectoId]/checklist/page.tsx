@@ -10,7 +10,6 @@ import {
   type FiltrosChecklist as Filtros,
 } from "@/server/datos/checklist";
 import { obtenerConfiguracionSegura } from "@/server/datos/empresa";
-import { EncabezadoPagina } from "@/components/layout/encabezado-pagina";
 import { PildoraCumplimiento } from "@/components/ui/cumplimiento";
 import { EstadoVacio, Tarjeta } from "@/components/ui/tarjeta";
 import { CategoriaChecklist } from "@/components/checklist/categoria-checklist";
@@ -64,29 +63,19 @@ export default async function PaginaChecklist({
 
   return (
     <>
-      <EncabezadoPagina
-        titulo="Checklist de calidad"
-        descripcion={`${proyecto.nombre} · ${proyecto.cliente.nombre}`}
-        migas={[
-          { etiqueta: "Proyectos", href: "/proyectos" },
-          { etiqueta: proyecto.codigo, href: `/proyectos/${proyecto.id}` },
-          { etiqueta: "Checklist" },
-        ]}
-        acciones={
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-texto-suave">
-              {proyecto.itemsCumplen} de {proyecto.itemsAplicables} aplicables
-            </span>
-            <PildoraCumplimiento
-              porcentaje={proyecto.porcentajeCumplimiento}
-              umbralBajo={empresa.umbralCumplimientoBajo}
-              className="text-base"
-            />
-          </div>
-        }
-      />
-
+      {/* El encabezado del proyecto y las pestañas los pone el layout. */}
       <div className="mb-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-texto-suave">
+            {proyecto.itemsCumplen} de {proyecto.itemsAplicables} ítems aplicables cumplen
+          </p>
+          <PildoraCumplimiento
+            porcentaje={proyecto.porcentajeCumplimiento}
+            umbralBajo={empresa.umbralCumplimientoBajo}
+            className="text-base"
+          />
+        </div>
+
         <FiltrosChecklist
           categorias={categorias.map((categoria) => ({
             id: categoria.id,

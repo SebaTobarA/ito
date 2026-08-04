@@ -12,6 +12,7 @@ import {
   TAMANO_MAXIMO_BYTES,
   tipoEsPermitido,
 } from "@/lib/almacenamiento";
+import { sucesorAlEliminar, versionParaNuevoDocumento } from "@/dominio/documentos";
 import { contextoProyecto } from "@/server/datos/alcance";
 import { obtenerDocumentosDeItem, obtenerItemEnAlcance } from "@/server/datos/checklist";
 import { registrarAuditoria } from "@/server/servicios/auditoria";
@@ -100,15 +101,15 @@ export async function subirDocumento(
     const descripcion = (datos.get("descripcion") as string | null)?.trim() || null;
     const reemplazaAId = (datos.get("reemplazaAId") as string | null) || null;
 
-    let version = 1;
+    let anterior: { version: number } | null = null;
     if (reemplazaAId) {
-      const anterior = await prisma.documento.findFirst({
+      anterior = await prisma.documento.findFirst({
         where: { id: reemplazaAId, itemProyectoId, eliminadoAt: null },
         select: { version: true },
       });
       if (!anterior) return { error: "La versión que intentas reemplazar ya no existe." };
-      version = anterior.version + 1;
     }
+    const version = versionParaNuevoDocumento(anterior);
 
     const ruta = rutaDeRespaldo({
       proyectoId: proyecto.id,
@@ -210,25 +211,32 @@ export async function eliminarDocumento(
     if (!contexto) return { error: "No tienes acceso a este proyecto." };
     exigir(usuario, "documento.eliminar", contexto);
 
+    // La cadena completa del ítem: `sucesorAlEliminar` la recorre hacia atrás
+    // hasta dar con una versión viva, no solo la inmediatamente anterior.
+    const cadena = await prisma.documento.findMany({
+      // `proyectoId` acota la búsqueda: `itemProyectoId` es nullable, y sin este
+      // límite un documento suelto traería los de otros proyectos.
+      where: { proyectoId: documento.proyectoId, itemProyectoId: documento.itemProyectoId },
+      select: {
+        id: true,
+        version: true,
+        esVersionActual: true,
+        reemplazaAId: true,
+        eliminadoAt: true,
+      },
+    });
+    const sucesorId = documento.esVersionActual ? sucesorAlEliminar(documentoId, cadena) : null;
+
     await prisma.$transaction(async (tx) => {
       await tx.documento.update({
         where: { id: documentoId },
         data: { eliminadoAt: new Date(), eliminadoPorId: usuario.id, esVersionActual: false },
       });
 
-      // Si se elimina la versión vigente, la anterior vuelve a serlo: el ítem no
-      // debe quedar sin respaldo actual mientras exista una versión válida.
-      if (documento.esVersionActual && documento.reemplazaAId) {
-        const anterior = await tx.documento.findFirst({
-          where: { id: documento.reemplazaAId, eliminadoAt: null },
-          select: { id: true },
-        });
-        if (anterior) {
-          await tx.documento.update({
-            where: { id: anterior.id },
-            data: { esVersionActual: true },
-          });
-        }
+      // Si se elimina la versión vigente, la anterior viva vuelve a serlo: el
+      // ítem no debe quedar sin respaldo actual teniendo uno válido.
+      if (sucesorId) {
+        await tx.documento.update({ where: { id: sucesorId }, data: { esVersionActual: true } });
       }
     });
 

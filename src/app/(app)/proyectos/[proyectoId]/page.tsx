@@ -1,19 +1,14 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ListChecks, Pencil } from "lucide-react";
 
 import { usuarioActual } from "@/auth";
-import { puede } from "@/lib/permisos";
 import { prisma } from "@/lib/prisma";
-import { contextoProyecto, filtroProyectos } from "@/server/datos/alcance";
+import { filtroProyectos } from "@/server/datos/alcance";
 import { obtenerConfiguracionSegura } from "@/server/datos/empresa";
 import {
   ETIQUETAS_ESTADO_PROYECTO,
   ETIQUETAS_MONEDA,
   ETIQUETAS_ROL_PROYECTO,
 } from "@/dominio/etiquetas";
-import { EncabezadoPagina } from "@/components/layout/encabezado-pagina";
-import { Boton } from "@/components/ui/boton";
 import { BarraCumplimiento, PildoraCumplimiento } from "@/components/ui/cumplimiento";
 import {
   CabeceraTarjeta,
@@ -63,32 +58,11 @@ export default async function PaginaProyecto({
   });
   if (!proyecto) notFound();
 
-  const contexto = await contextoProyecto(usuario, proyectoId);
-  const puedeEditar = puede(usuario, "proyecto.editar", contexto ?? {});
-
   const totalItems = proyecto.categorias.reduce((suma, c) => suma + c._count.items, 0);
 
+  // El encabezado, las acciones y las pestañas los pone el layout del proyecto.
   return (
     <>
-      <EncabezadoPagina
-        titulo={proyecto.nombre}
-        descripcion={`${proyecto.cliente.nombre}${proyecto.comuna ? ` · ${proyecto.comuna}` : ""}`}
-        migas={[
-          { etiqueta: "Proyectos", href: "/proyectos" },
-          { etiqueta: proyecto.codigo },
-        ]}
-        acciones={
-          puedeEditar && (
-            <Boton variante="secundario" asChild>
-              <Link href={`/proyectos/${proyecto.id}/editar`}>
-                <Pencil className="h-4 w-4" />
-                Editar ficha
-              </Link>
-            </Boton>
-          )
-        }
-      />
-
       <div className="mb-5 grid gap-4 lg:grid-cols-3">
         <Tarjeta className="lg:col-span-2">
           <CabeceraTarjeta className="flex items-center justify-between gap-3">
@@ -130,12 +104,6 @@ export default async function PaginaProyecto({
                 </div>
               ))}
             </div>
-            <Boton variante="secundario" className="mt-4 w-full" asChild>
-              <Link href={`/proyectos/${proyecto.id}/checklist`}>
-                <ListChecks className="h-4 w-4" />
-                Abrir el checklist de calidad
-              </Link>
-            </Boton>
           </CuerpoTarjeta>
         </Tarjeta>
 

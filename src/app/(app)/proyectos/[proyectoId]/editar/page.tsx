@@ -5,7 +5,6 @@ import { puede } from "@/lib/permisos";
 import { prisma } from "@/lib/prisma";
 import { contextoProyecto, filtroClientes, filtroProyectos } from "@/server/datos/alcance";
 import { opcionesEquipo, usuarioConRol } from "@/server/datos/usuarios";
-import { EncabezadoPagina } from "@/components/layout/encabezado-pagina";
 import { FormularioProyecto } from "@/components/proyectos/formulario-proyecto";
 
 export const metadata = { title: "Editar proyecto" };
@@ -36,18 +35,9 @@ export default async function PaginaEditarProyecto({
     opcionesEquipo(),
   ]);
 
+  // El encabezado del proyecto lo pone el layout; aquí va solo el formulario.
   return (
     <>
-      <EncabezadoPagina
-        titulo="Editar proyecto"
-        descripcion={proyecto.nombre}
-        migas={[
-          { etiqueta: "Proyectos", href: "/proyectos" },
-          { etiqueta: proyecto.codigo, href: `/proyectos/${proyecto.id}` },
-          { etiqueta: "Editar" },
-        ]}
-      />
-
       <FormularioProyecto
         proyecto={{
           id: proyecto.id,

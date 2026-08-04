@@ -7,7 +7,12 @@ import { actualizarItem } from "@/server/acciones/items";
 import { useAccion } from "@/lib/use-accion";
 import { AreaTexto, Input, Selector } from "@/components/ui/campos";
 import { Insignia } from "@/components/ui/tarjeta";
-import { ETIQUETAS_CUMPLE, ETIQUETAS_REQUISITO, ETIQUETAS_SI_NO_NA } from "@/dominio/etiquetas";
+import {
+  ETIQUETAS_CUMPLE,
+  ETIQUETAS_REQUISITO,
+  ETIQUETAS_ROL_PROYECTO,
+  ETIQUETAS_SI_NO_NA,
+} from "@/dominio/etiquetas";
 import {
   ABREVIATURAS_FRECUENCIA,
   ETIQUETAS_FRECUENCIA,
@@ -24,6 +29,9 @@ const TONO_CUMPLE = {
   NA: "neutro",
   PENDIENTE: "aviso",
 } as const;
+
+/** Roles que pueden producir o revisar un registro. Excluye los de solo lectura. */
+const ROLES_OPERATIVOS = ["ITO", "ITO_APOYO", "JEFE_PROYECTO", "SUBGERENTE"] as const;
 
 export function ItemChecklist({
   item,
@@ -227,8 +235,38 @@ export function ItemChecklist({
               </p>
             </Detalle>
 
+            <Detalle titulo="Produce el registro">
+              <Selector
+                key={`responsableRol-${item.responsableRol}`}
+                name="responsableRol"
+                defaultValue={item.responsableRol}
+                onChange={guardar}
+                disabled={!puedeEditar}
+                className="h-9 text-xs"
+              >
+                {ROLES_OPERATIVOS.map((rol) => (
+                  <option key={rol} value={rol}>
+                    {ETIQUETAS_ROL_PROYECTO[rol]}
+                  </option>
+                ))}
+              </Selector>
+            </Detalle>
+
             <Detalle titulo="Revisa">
-              <p className="flex h-9 items-center text-xs text-texto">{item.revisorRol}</p>
+              <Selector
+                key={`revisorRol-${item.revisorRol}`}
+                name="revisorRol"
+                defaultValue={item.revisorRol}
+                onChange={guardar}
+                disabled={!puedeEditar}
+                className="h-9 text-xs"
+              >
+                {ROLES_OPERATIVOS.map((rol) => (
+                  <option key={rol} value={rol}>
+                    {ETIQUETAS_ROL_PROYECTO[rol]}
+                  </option>
+                ))}
+              </Selector>
             </Detalle>
 
             <Detalle titulo="Observaciones" className="sm:col-span-2 lg:col-span-4">
