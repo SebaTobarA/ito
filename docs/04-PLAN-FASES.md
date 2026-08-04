@@ -4,6 +4,9 @@ Cada fase termina con: la aplicación **compilando y ejecutándose**, pruebas en
 resumen de lo implementado y las instrucciones concretas para que lo pruebes tú mismo. No se
 avanza a la fase siguiente sin tu visto bueno.
 
+Las entidades y los cálculos de las fases 3 a 6 están detallados en
+[07-PLANIFICACION-E-INFORME-EJECUTIVO](07-PLANIFICACION-E-INFORME-EJECUTIVO.md).
+
 ---
 
 ## Fase 0 — Preparación del entorno *(previa, técnica)*
@@ -71,57 +74,110 @@ subir una foto como respaldo y ver el porcentaje actualizarse al instante.
 
 ---
 
-## Fase 3 — Ciclos de revisión y auditoría
+## Fase 3 — Catálogos y wizard de planificación
 
-- Crear ciclo de revisión: congela un snapshot de todos los ítems del proyecto.
-- Flujo de aprobación en dos niveles: Jefe de Proyecto → Subgerente, con fecha, resultado
-  (aprobado / con observaciones / rechazado) y comentario.
-- Historial completo de ciclos, comparación entre ciclos y **gráfico de evolución del
-  cumplimiento**.
+**Objetivo**: que cada proyecto declare qué se contrató y quién responde por qué, porque eso
+determina qué módulos se activan en las fases siguientes.
+
+- **Catálogos editables** desde administración: especialidades con su código, tipos de proyecto,
+  estados de documento, causas de no cumplimiento, tipos de servicio, cargos y dedicación.
+  Nada de esto queda fijo en el código.
+- **Wizard de creación de proyecto** basado en la guía de planificación: servicios contratados
+  (con fechas y comentario), equipo asignado con dedicación, enfoque del servicio.
+- **Matriz de responsabilidades** tipo RACI: plantilla maestra versionada + copia independiente
+  por proyecto, con responsable, registro asociado del checklist y requerimientos del cliente.
+- Activación de módulos por proyecto según los servicios contratados.
+- Tests: clonado de la matriz, resolución de módulos activos.
+
+**Criterio de aceptación**: creas un proyecto de solo inspección técnica y la navegación no
+muestra los módulos que ese contrato no incluye.
+
+---
+
+## Fase 4 — Registros operativos y UF
+
+**Objetivo**: cargar los datos fuente que después alimentan el informe, sin cálculos todavía.
+
+- **Notas de cambio** con los tres bloques de monto (solicitado / validado / aprobado).
+- **RDI** con estado y días de respuesta derivados.
+- **Estados de pago**, **procedimientos**, **correspondencia**, **libro de obra** y
+  **registro de seguridad**.
+- **Protocolos**: catálogo por partida, matriz protocolo × período y estado agregado por
+  especialidad.
+- **`PeriodoControl`**: la entidad que unifica columna de matriz, punto de curva e informe.
+- **Tabla `ValorUf` y su job diario**. Va aquí y no en la fase financiera porque los estados de
+  pago ya manejan dinero: sin conversión no se pueden mostrar.
+- Tests: derivación de estados, conversión UF con valor faltante.
+
+**Criterio de aceptación**: registras una RDI sin respuesta y aparece como pendiente con sus
+días corriendo solos; un monto en UF se muestra en pesos con el valor del día correcto.
+
+---
+
+## Fase 5 — Curva de avance y control de plazo
+
+**Objetivo**: el módulo de mayor densidad de dominio puro y el más vendible.
+
+- **Partidas** con incidencia y fechas programadas; avance real por partida y por período.
+- **Curva de avance**: programado, real, acumulados, atraso, velocidad relativa requerida y
+  promedio, avance esperado recursivo y fecha de término proyectada.
+- **Hitos** con fecha programada y real, variación de fin y cálculo de multa contra tope.
+- **Aumentos de plazo** y **no cumplimientos** con causa y prioridad.
+- Gráfico de curva S con las series programada, real y esperada.
+- Tests: `curva.ts` y `plazo.ts` completos, incluidos períodos de duración irregular.
+
+**Criterio de aceptación**: cargas el avance de las partidas de la semana y el sistema proyecta
+solo la fecha de término, sin que nadie escriba el avance global.
+
+---
+
+## Fase 6 — Consolidado semanal y resumen ejecutivo
+
+**Objetivo**: reemplazar el archivo de informe ejecutivo completo.
+
+- **Formulario de consolidado** por proyecto y período: trae y calcula todo lo derivable y pide
+  solo lo que requiere criterio humano (observaciones diarias, dotación, capacitaciones, hitos,
+  no cumplimientos).
+- **Modelo financiero**: costo directo, proforma, gastos generales, utilidades, modificaciones,
+  IVA según régimen, anticipo, retenciones y líquido a pagar.
+- **Resumen ejecutivo** de solo lectura, con snapshot congelado al emitir y versionado.
+- Tests: `financiero.ts`, ventana de agregación período a período, inmutabilidad del snapshot.
+
+**Criterio de aceptación**: emites el informe de la semana escribiendo unas doce cifras, y el
+resumen ejecutivo queda listo para enviar.
+
+---
+
+## Fase 7 — Exportación, dashboard y alertas
+
+- **PDF y Excel** del resumen ejecutivo y del estado de proyecto, con tu marca.
+- **Panel general** con todos los proyectos, semáforo por umbral y consolidado por cliente.
+- **Módulo de vencimientos**: boletas de garantía, pólizas y permisos con monto, entidad y
+  documento adjunto.
+- **Motor de alertas** (job diario vía Vercel Cron): vencimientos próximos y cumplidos, ítems
+  atrasados por frecuencia, proyectos bajo umbral, **RDI sin respuesta, protocolos abiertos e
+  hitos atrasados**.
+- Centro de alertas con estados e insignia en la navegación; correo opcional con Resend.
+- Tests: generación de alertas, cifras del reporte iguales a las de la aplicación.
+
+**Criterio de aceptación**: una boleta que vence en 25 días y una RDI de 15 días sin respuesta
+aparecen solas como alertas activas.
+
+---
+
+## Fase 8 — Ciclos de revisión y auditoría
+
+Se posterga respecto del plan original: es control interno de calidad, no entregable al cliente,
+y el motor de reporting genera ingresos antes.
+
+- Ciclo de revisión que congela un snapshot de todos los ítems del proyecto.
+- Aprobación en dos niveles: Jefe de Proyecto → Subgerente, con resultado y comentario.
+- Historial, comparación entre ciclos y gráfico de evolución del cumplimiento.
 - Vista de auditoría por proyecto y por ítem: quién cambió qué, cuándo, valor anterior y nuevo.
-- Registro automático de auditoría vía middleware de Prisma en todas las mutaciones.
-- Tests: apertura y cierre de ciclos, inmutabilidad de los snapshots, reglas de aprobación.
+- Tests: apertura y cierre de ciclos, inmutabilidad de snapshots, reglas de aprobación.
 
 **Criterio de aceptación**: cierras un ciclo, lo aprueba el JP y luego el Subgerente, y el
-histórico anterior queda intacto y consultable.
-
----
-
-## Fase 4 — Dashboard y alertas
-
-- **Panel general**: todos los clientes y proyectos activos con su % de cumplimiento, semáforo
-  por umbral configurable, orden y filtros; vista consolidada por cliente.
-- **Módulo de vencimientos**: alta y seguimiento de boletas de garantía, pólizas y permisos con
-  fecha, monto, entidad emisora y documento adjunto.
-- **Motor de alertas** (job diario vía Vercel Cron):
-  - vencimientos próximos según los días de alerta configurados,
-  - vencimientos ya cumplidos,
-  - ítems atrasados según su frecuencia (semanal, mensual, etc.),
-  - proyectos bajo el umbral de cumplimiento,
-  - ciclos de revisión pendientes.
-- Centro de alertas con estados (activa / vista / resuelta / descartada) e insignia en la
-  navegación.
-- Notificaciones por correo (opcional, con Resend) — resumen semanal y alertas críticas.
-- Tests: cálculo de próxima fecha de control por frecuencia, estados de vencimiento, generación
-  de alertas.
-
-**Criterio de aceptación**: una boleta que vence en 25 días aparece como alerta activa en el
-panel, sin que nadie la haya ingresado a mano en un recordatorio.
-
----
-
-## Fase 5 — Exportación y reportes
-
-- **PDF de estado de proyecto** con tu marca: portada con logo y datos del cliente, ficha del
-  proyecto, resumen de cumplimiento por categoría, detalle del checklist, vencimientos
-  vigentes, historial de revisiones y firmas.
-- **Excel de estado de proyecto**: formato de planilla equivalente al Plan de Calidad, para
-  quien prefiera el formato tradicional.
-- Reporte consolidado por cliente (todos sus proyectos).
-- Configuración del reporte: qué secciones incluir, con o sin observaciones internas.
-- Tests: generación sin errores, cifras del reporte coinciden con las de la aplicación.
-
-**Criterio de aceptación**: generas un PDF con tu logo y se lo puedes mandar al cliente tal cual.
+histórico anterior queda intacto.
 
 ---
 

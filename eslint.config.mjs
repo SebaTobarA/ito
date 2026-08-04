@@ -20,6 +20,19 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      /*
+       * Las Server Actions reciben `(estadoPrevio, FormData)` por contrato de
+       * `useActionState`, aunque muchas no usen el estado previo. El prefijo `_`
+       * marca esos parámetros como deliberadamente ignorados.
+       */
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
+    },
+  },
 ];
 
 export default eslintConfig;

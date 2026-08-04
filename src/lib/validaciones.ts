@@ -36,6 +36,42 @@ const numeroOpcional = z
     message: "Debe ser un número",
   });
 
+/**
+ * Campo que se puede vaciar.
+ *
+ * Distinto de `textoOpcional`: aquel devuelve `undefined`, que en Prisma significa
+ * «no cambiar». Estos campos sí deben poder borrarse, así que un valor vacío tiene
+ * que llegar como `null` para que la actualización lo limpie de verdad.
+ */
+const textoNullable = z
+  .string()
+  .trim()
+  .optional()
+  .transform((valor) => (valor === undefined || valor === "" ? null : valor));
+
+const fechaNullable = z
+  .string()
+  .optional()
+  .transform((valor) => (valor === undefined || valor === "" ? null : new Date(valor)))
+  .refine((valor) => valor === null || !Number.isNaN(valor.getTime()), {
+    message: "Fecha inválida",
+  });
+
+const FRECUENCIAS = [
+  "INICIO_PROYECTO",
+  "DIARIA",
+  "SEMANAL",
+  "QUINCENAL",
+  "MENSUAL",
+  "TRIMESTRAL",
+  "SEGUN_REQUERIMIENTO",
+  "POR_EVENTO",
+  "PERMANENTE",
+  "FINAL_PROYECTO",
+] as const;
+
+const ROLES_OPERATIVOS = ["ITO", "ITO_APOYO", "JEFE_PROYECTO", "SUBGERENTE"] as const;
+
 // ---------------------------------------------------------------- Cliente
 
 export const esquemaCliente = z.object({
@@ -177,20 +213,9 @@ export const esquemaItemPlantilla = z.object({
   codigoRegistro: textoOpcional,
   subgrupo: textoOpcional,
   instrucciones: textoOpcional,
-  frecuencia: z.enum([
-    "INICIO_PROYECTO",
-    "DIARIA",
-    "SEMANAL",
-    "QUINCENAL",
-    "MENSUAL",
-    "TRIMESTRAL",
-    "SEGUN_REQUERIMIENTO",
-    "POR_EVENTO",
-    "PERMANENTE",
-    "FINAL_PROYECTO",
-  ]),
-  responsableRol: z.enum(["ITO", "ITO_APOYO", "JEFE_PROYECTO", "SUBGERENTE"]),
-  revisorRol: z.enum(["ITO", "ITO_APOYO", "JEFE_PROYECTO", "SUBGERENTE"]),
+  frecuencia: z.enum(FRECUENCIAS),
+  responsableRol: z.enum(ROLES_OPERATIVOS),
+  revisorRol: z.enum(ROLES_OPERATIVOS),
   requiereRespaldoDigital: z.enum(["REQUERIDO", "OPCIONAL", "NO_APLICA"]),
   requiereRespaldoFisico: z.enum(["REQUERIDO", "OPCIONAL", "NO_APLICA"]),
   controlaVencimiento: z.coerce.boolean().default(false),
@@ -198,6 +223,52 @@ export const esquemaItemPlantilla = z.object({
   visibleParaCliente: z.coerce.boolean().default(true),
   orden: z.coerce.number().int().min(0).default(0),
   activo: z.coerce.boolean().default(true),
+});
+
+// ------------------------------------------------- Checklist del proyecto
+
+/**
+ * Edición de un ítem del checklist de un proyecto.
+ *
+ * Es la copia viva, no la plantilla: aquí se registra lo que ocurre en obra.
+ * Todos los campos son opcionales porque la vista guarda campo a campo — quien
+ * cambia solo el estado de cumplimiento no debe reenviar el resto del ítem.
+ */
+export const esquemaEdicionItem = z.object({
+  aplica: z.coerce.boolean().optional(),
+  cumple: z.enum(["SI", "NO", "NA", "PENDIENTE"]).optional(),
+  respaldoDigital: z.enum(["SI", "NO", "NA"]).optional(),
+  respaldoFisico: z.enum(["SI", "NO", "NA"]).optional(),
+  observaciones: textoNullable.optional(),
+  responsableUsuarioId: textoNullable.optional(),
+  frecuencia: z.enum(FRECUENCIAS).optional(),
+  responsableRol: z.enum(ROLES_OPERATIVOS).optional(),
+  revisorRol: z.enum(ROLES_OPERATIVOS).optional(),
+  fechaUltimoControl: fechaNullable.optional(),
+});
+
+export type DatosEdicionItem = z.infer<typeof esquemaEdicionItem>;
+
+/** Ítem creado a medida para un proyecto puntual, fuera de la plantilla maestra. */
+export const esquemaItemAdHoc = z.object({
+  categoriaProyectoId: z.string().min(1, "Selecciona la categoría"),
+  descripcion: z.string().trim().min(3, "La descripción es obligatoria"),
+  codigoRegistro: textoNullable,
+  subgrupo: textoNullable,
+  instrucciones: textoNullable,
+  frecuencia: z.enum(FRECUENCIAS).default("SEGUN_REQUERIMIENTO"),
+  responsableRol: z.enum(ROLES_OPERATIVOS).default("ITO"),
+  revisorRol: z.enum(ROLES_OPERATIVOS).default("JEFE_PROYECTO"),
+  requiereRespaldoDigital: z.enum(["REQUERIDO", "OPCIONAL", "NO_APLICA"]).default("REQUERIDO"),
+  requiereRespaldoFisico: z.enum(["REQUERIDO", "OPCIONAL", "NO_APLICA"]).default("NO_APLICA"),
+  visibleParaCliente: z.coerce.boolean().default(true),
+});
+
+/** Acción aplicada a todos los ítems de una categoría a la vez. */
+export const esquemaAccionMasiva = z.object({
+  categoriaProyectoId: z.string().min(1),
+  operacion: z.enum(["marcarNoAplica", "marcarAplica", "asignarResponsable"]),
+  responsableUsuarioId: textoNullable.optional(),
 });
 
 /** Convierte los errores de Zod al formato { campo: mensaje } que usan los formularios. */

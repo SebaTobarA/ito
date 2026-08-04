@@ -12,13 +12,18 @@ revisión y alertas de vencimiento.
 
 ## Estado actual
 
-**Fase 1 completa.** La aplicación compila, corre y está verificada contra una base de datos
-real: autenticación con roles, panel de marca configurable, CRUD de clientes y proyectos,
-plantilla maestra versionada del checklist y clonado automático al crear un proyecto
-(20 categorías, 99 registros).
+**Fases 1 y 2 completas**, verificadas contra una base de datos real.
 
-Las fases 2 a 5 (checklist operativo, ciclos de revisión, alertas y reportes) están planificadas
-en [docs/04-PLAN-FASES.md](docs/04-PLAN-FASES.md).
+- **Fase 1**: autenticación con roles, marca configurable, CRUD de clientes y proyectos,
+  plantilla maestra versionada y clonado automático del checklist (20 categorías, 99 registros).
+- **Fase 2**: checklist operativo por proyecto — filtros y búsqueda, edición campo a campo con
+  guardado inmediato, recálculo automático de cumplimiento, acciones masivas por categoría,
+  registros a medida, respaldos documentales versionados con descarga verificada por permisos,
+  y aplicación instalable en el celular.
+
+Las fases 3 a 8 están planificadas en [docs/04-PLAN-FASES.md](docs/04-PLAN-FASES.md); el diseño
+del motor de informe ejecutivo está en
+[docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md](docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md).
 
 ## Puesta en marcha
 
@@ -44,6 +49,8 @@ agregar `&pgbouncer=true` al `DATABASE_URL`. Detalles en [CLAUDE.md](CLAUDE.md).
 | [docs/03-ESTRUCTURA-PROYECTO.md](docs/03-ESTRUCTURA-PROYECTO.md) | Estructura de carpetas y convenciones de código |
 | [docs/04-PLAN-FASES.md](docs/04-PLAN-FASES.md) | Plan de implementación por fases con entregables y criterios de aceptación |
 | [docs/05-CHECKLIST-MAESTRO.md](docs/05-CHECKLIST-MAESTRO.md) | Metodología propia: categorías, ítems y esquema de codificación |
+| [docs/06-DESPLIEGUE.md](docs/06-DESPLIEGUE.md) | Puesta en producción en Vercel + Neon |
+| [docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md](docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md) | Guía de planificación, registros operativos, curva de avance, UF e informe ejecutivo semanal |
 
 ## Objetivo de negocio
 

@@ -59,4 +59,12 @@ Levanta un Postgres local y devuelve la cadena de conexión. **Agregar `&pgbounc
 
 - **Fase 1 — completa**: autenticación, marca configurable, CRUD de clientes y proyectos,
   plantilla maestra versionada, clonado automático del checklist, gestión de usuarios.
-- **Fases 2 a 5**: ver [`docs/04-PLAN-FASES.md`](docs/04-PLAN-FASES.md).
+- **Fase 2 — completa**: checklist operativo con filtros y edición campo a campo, acciones
+  masivas por categoría, ítems a medida, respaldos documentales versionados con descarga
+  verificada por permisos, y PWA instalable con marca dinámica.
+- **Fases 3 a 8**: ver [`docs/04-PLAN-FASES.md`](docs/04-PLAN-FASES.md). El diseño de las fases
+  3 a 6 (planificación, registros operativos, curva de avance, UF e informe ejecutivo) está en
+  [`docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md`](docs/07-PLANIFICACION-E-INFORME-EJECUTIVO.md).
+
+La UF es la unidad de cuenta: los montos se guardan en UF y los pesos se calculan al mostrar.
+Solo los pagos ya liquidados congelan su equivalente en pesos.

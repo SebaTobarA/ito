@@ -26,46 +26,14 @@ export function almacenamiento(): AdaptadorAlmacenamiento {
 }
 
 /**
- * Ruta donde se guarda un respaldo. Se agrupa por proyecto para que el bucket
- * sea navegable y para poder borrar un proyecto completo si alguna vez hiciera falta.
+ * Las reglas de tamaño, tipo y ruta viven en `dominio/archivos.ts`: las comparte
+ * el navegador, que no puede importar este módulo porque usa `node:fs`.
+ * Se reexportan para que el servidor tenga un único punto de entrada.
  */
-export function rutaDeRespaldo(params: {
-  proyectoId: string;
-  itemProyectoId: string | null;
-  nombreArchivo: string;
-}): string {
-  const seguro = params.nombreArchivo
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "-")
-    .slice(-120);
-
-  const carpeta = params.itemProyectoId ?? "general";
-  return `proyectos/${params.proyectoId}/${carpeta}/${Date.now()}-${seguro}`;
-}
-
-export const TAMANO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB
-
-export const TIPOS_PERMITIDOS = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/msword",
-  "text/csv",
-  "text/plain",
-];
-
-export function tipoEsPermitido(mimeType: string): boolean {
-  return TIPOS_PERMITIDOS.includes(mimeType);
-}
-
-export function formatearTamano(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+export {
+  formatearTamano,
+  rutaDeRespaldo,
+  TAMANO_MAXIMO_BYTES,
+  TIPOS_PERMITIDOS,
+  tipoEsPermitido,
+} from "@/dominio/archivos";

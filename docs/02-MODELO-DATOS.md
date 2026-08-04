@@ -3,6 +3,11 @@
 Propuesta de esquema completo. La notación es Prisma, pero lo importante son las **entidades,
 campos y relaciones**; los detalles de sintaxis se afinan al implementar.
 
+Este documento cubre el núcleo: clientes, proyectos, checklist, documentos, vencimientos y
+ciclos de revisión. Las entidades del motor de reporting —planificación, registros operativos,
+curva de avance, informe semanal y manejo de UF— están en
+[07-PLANIFICACION-E-INFORME-EJECUTIVO](07-PLANIFICACION-E-INFORME-EJECUTIVO.md).
+
 ## Mapa de entidades
 
 ```

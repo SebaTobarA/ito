@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { ListChecks, Pencil } from "lucide-react";
 
 import { usuarioActual } from "@/auth";
 import { puede } from "@/lib/permisos";
@@ -130,10 +130,12 @@ export default async function PaginaProyecto({
                 </div>
               ))}
             </div>
-            <p className="mt-4 rounded-lg bg-fondo px-3 py-2 text-xs text-texto-suave">
-              La edición del checklist ítem por ítem, la carga de respaldos y los ciclos de revisión
-              llegan en las fases 2 y 3.
-            </p>
+            <Boton variante="secundario" className="mt-4 w-full" asChild>
+              <Link href={`/proyectos/${proyecto.id}/checklist`}>
+                <ListChecks className="h-4 w-4" />
+                Abrir el checklist de calidad
+              </Link>
+            </Boton>
           </CuerpoTarjeta>
         </Tarjeta>
 

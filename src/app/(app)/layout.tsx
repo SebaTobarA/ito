@@ -5,6 +5,7 @@ import { puede } from "@/lib/permisos";
 import { ETIQUETAS_ROL_GLOBAL } from "@/dominio/etiquetas";
 import { obtenerConfiguracionSegura } from "@/server/datos/empresa";
 import { Navegacion, type EntradaMenu } from "@/components/layout/navegacion";
+import { RegistroPwa } from "@/components/layout/registro-pwa";
 
 export default async function LayoutAplicacion({ children }: { children: React.ReactNode }) {
   const usuario = await usuarioActual();
@@ -31,6 +32,7 @@ export default async function LayoutAplicacion({ children }: { children: React.R
 
   return (
     <div className="min-h-screen">
+      <RegistroPwa />
       <Navegacion
         empresa={empresa}
         entradas={entradas}
