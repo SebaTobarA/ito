@@ -15,6 +15,13 @@ import {
   TOTAL_CATEGORIAS_PLANTILLA_V1,
   TOTAL_ITEMS_PLANTILLA_V1,
 } from "../../src/server/servicios/plantilla-inicial";
+import {
+  crearCatalogosIniciales,
+  crearResponsabilidadesIniciales,
+  TOTAL_ESPECIALIDADES,
+  TOTAL_OPCIONES_CATALOGO,
+  TOTAL_RESPONSABILIDADES,
+} from "../../src/server/servicios/catalogos-iniciales";
 
 const prisma = new PrismaClient();
 
@@ -46,7 +53,7 @@ async function main() {
   console.log(`  ${admin.email}`);
 
   console.log("→ Plantilla maestra del checklist…");
-  const { creada } = await crearPlantillaInicial(prisma, {
+  const { plantilla, creada } = await crearPlantillaInicial(prisma, {
     nombreEmpresa: configuracion.nombreEmpresa,
     prefijoDocumentos: configuracion.prefijoDocumentos,
     formatoCodigoRegistro: configuracion.formatoCodigoRegistro,
@@ -55,6 +62,20 @@ async function main() {
     creada
       ? `  ${TOTAL_CATEGORIAS_PLANTILLA_V1} categorías y ${TOTAL_ITEMS_PLANTILLA_V1} ítems creados.`
       : "  La plantilla v1 ya existe; no se vuelve a crear.",
+  );
+
+  console.log("→ Catálogos configurables…");
+  await crearCatalogosIniciales(prisma);
+  console.log(
+    `  ${TOTAL_ESPECIALIDADES} especialidades y ${TOTAL_OPCIONES_CATALOGO} opciones de catálogo.`,
+  );
+
+  console.log("→ Matriz de responsabilidades…");
+  const responsabilidades = await crearResponsabilidadesIniciales(prisma, plantilla.id);
+  console.log(
+    responsabilidades.creadas
+      ? `  ${TOTAL_RESPONSABILIDADES} responsabilidades creadas.`
+      : "  La matriz ya existe; no se vuelve a crear.",
   );
 
   console.log("\n✓ Carga inicial completa.");

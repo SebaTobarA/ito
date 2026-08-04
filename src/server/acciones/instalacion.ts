@@ -8,6 +8,10 @@ import { prisma } from "@/lib/prisma";
 import { aObjeto } from "@/lib/validaciones";
 import { ID_CONFIGURACION } from "@/server/datos/empresa";
 import { crearPlantillaInicial } from "@/server/servicios/plantilla-inicial";
+import {
+  crearCatalogosIniciales,
+  crearResponsabilidadesIniciales,
+} from "@/server/servicios/catalogos-iniciales";
 import { aResultadoDeError, type ResultadoAccion } from "./resultado";
 
 const esquemaInstalacion = z
@@ -89,11 +93,17 @@ export async function configurarInstalacion(
           },
         });
 
-        await crearPlantillaInicial(tx, {
+        const { plantilla } = await crearPlantillaInicial(tx, {
           nombreEmpresa: configuracion.nombreEmpresa,
           prefijoDocumentos: configuracion.prefijoDocumentos,
           formatoCodigoRegistro: configuracion.formatoCodigoRegistro,
         });
+
+        // Los catálogos y la matriz de responsabilidades nacen con la
+        // instalación: sin ellos la guía de planificación no tendría con qué
+        // llenarse, y son editables desde el panel igual que la plantilla.
+        await crearCatalogosIniciales(tx);
+        await crearResponsabilidadesIniciales(tx, plantilla.id);
       },
       { timeout: 30_000 },
     );

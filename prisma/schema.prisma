@@ -16,6 +16,12 @@ datasource db {
   // Conexión directa, sin pool: la usan las migraciones, que necesitan una
   // sesión estable. En local puede ser la misma cadena sin `pgbouncer=true`.
   directUrl = env("DIRECT_URL")
+  // Base de sombra que `prisma migrate dev` usa para comparar el esquema.
+  // Es opcional: en producción (`migrate deploy`) no se usa, y si la variable
+  // no está definida Prisma crea la suya. Se declara porque el servidor local
+  // de `prisma dev` expone una base dedicada para esto, y sin apuntarla el
+  // comando falla al intentar crearla sobre `template1`.
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 // ============================================================================
@@ -157,6 +163,24 @@ enum Moneda {
   USD
 }
 
+/// Listas planas que el administrador edita desde el panel. Un enum de Prisma
+/// obligaría a migrar la base cada vez que se agrega una opción, y estas son
+/// justamente las que cambian de proyecto en proyecto.
+enum TipoCatalogo {
+  TIPO_PROYECTO
+  ESTADO_DOCUMENTO
+  CAUSA_NO_CUMPLIMIENTO
+  TIPO_SERVICIO
+  CARGO_EQUIPO
+  RECURSO_TERRENO
+}
+
+enum Dedicacion {
+  TOTAL
+  PARCIAL
+  VISITAS
+}
+
 // ============================================================================
 // CONFIGURACIÓN DE EMPRESA (marca) — fila única
 // ============================================================================
@@ -231,6 +255,7 @@ model Usuario {
   evaluacionesRevisadas EvaluacionItem[]   @relation("EvaluacionRevisadoPor")
   itemsACargo         ItemProyecto[]       @relation("ItemResponsable")
   registrosAuditoria  RegistroAuditoria[]  @relation("AuditoriaUsuario")
+  responsabilidades   ResponsabilidadProyecto[] @relation("ResponsabilidadResponsable")
 
   // Tablas del adaptador Auth.js — preinstaladas para habilitar SSO sin migrar
   accounts Account[]
@@ -346,12 +371,17 @@ model Proyecto {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  asignaciones AsignacionProyecto[]
-  categorias   CategoriaProyecto[]
-  ciclos       CicloRevision[]
-  alertas      Alerta[]
-  documentos   Documento[]
-  vencimientos Vencimiento[]
+  /// Criterio de gestión propio de este proyecto, de la guía de planificación.
+  enfoqueServicio String? @db.Text
+
+  asignaciones      AsignacionProyecto[]
+  categorias        CategoriaProyecto[]
+  ciclos            CicloRevision[]
+  alertas           Alerta[]
+  documentos        Documento[]
+  vencimientos      Vencimiento[]
+  servicios         ServicioContratado[]
+  responsabilidades ResponsabilidadProyecto[]
 
   @@index([clienteId, estado])
   @@index([estado])
@@ -372,6 +402,9 @@ model AsignacionProyecto {
   desde         DateTime    @default(now())
   hasta         DateTime?
   asignadoPorId String?
+  /// Dedicación al proyecto, de la guía de planificación. Las iniciales del
+  /// profesional no se guardan: se derivan del nombre (dominio/personas.ts).
+  dedicacion    Dedicacion?
 
   @@unique([proyectoId, usuarioId, rol])
   @@index([usuarioId, activo])
@@ -392,8 +425,9 @@ model PlantillaChecklist {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  categorias CategoriaPlantilla[]
-  proyectos  Proyecto[]
+  categorias        CategoriaPlantilla[]
+  proyectos         Proyecto[]
+  responsabilidades ResponsabilidadPlantilla[]
 
   @@index([esActiva])
 }
@@ -437,6 +471,8 @@ model ItemPlantilla {
   orden                   Int
   peso                    Int         @default(1)
   activo                  Boolean     @default(true)
+
+  responsabilidades ResponsabilidadPlantilla[]
 
   @@unique([categoriaId, codigo])
   @@index([categoriaId, orden])
@@ -506,10 +542,11 @@ model ItemProyecto {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  documentos   Documento[]
-  vencimientos Vencimiento[]
-  evaluaciones EvaluacionItem[]
-  alertas      Alerta[]
+  documentos        Documento[]
+  vencimientos      Vencimiento[]
+  evaluaciones      EvaluacionItem[]
+  alertas           Alerta[]
+  responsabilidades ResponsabilidadProyecto[]
 
   @@index([categoriaProyectoId, orden])
   @@index([fechaProximoControl])
@@ -700,4 +737,123 @@ model Alerta {
 
   @@index([proyectoId, estado])
   @@index([estado, severidad, fechaObjetivo])
+}
+
+// ============================================================================
+// CATÁLOGOS CONFIGURABLES (Fase 3)
+// ============================================================================
+
+/// Especialidad técnica. Tiene tabla propia y no es una opción de catálogo
+/// porque la van a referenciar las RDI, los protocolos y todas las agregaciones
+/// del informe ejecutivo.
+model Especialidad {
+  id     String  @id @default(cuid())
+  codigo String  @unique /// Sigla corta configurable: "TOP", "MOV", "EST"
+  nombre String
+  orden  Int     @default(0)
+  activa Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([activa, orden])
+}
+
+model OpcionCatalogo {
+  id       String       @id @default(cuid())
+  tipo     TipoCatalogo
+  codigo   String
+  etiqueta String
+  orden    Int          @default(0)
+  activa   Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  servicios ServicioContratado[]
+
+  @@unique([tipo, codigo])
+  @@index([tipo, activa, orden])
+}
+
+// ============================================================================
+// GUÍA DE PLANIFICACIÓN (Fase 3)
+// ============================================================================
+
+/// Qué se le contrató al cliente en este proyecto. Determina qué módulos se le
+/// muestran al equipo: un contrato de solo inspección técnica no debería
+/// mostrar el módulo de estados de pago.
+model ServicioContratado {
+  id           String         @id @default(cuid())
+  proyectoId   String
+  proyecto     Proyecto       @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  opcionId     String
+  opcion       OpcionCatalogo @relation(fields: [opcionId], references: [id], onDelete: Restrict)
+  aplica       Boolean        @default(false)
+  fechaInicio  DateTime?
+  fechaTermino DateTime?
+  comentario   String?        @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([proyectoId, opcionId])
+  @@index([proyectoId, aplica])
+}
+
+/// Matriz de responsabilidades maestra. Se versiona junto con el checklist:
+/// comparte `PlantillaChecklist`, así una versión de la metodología es una sola
+/// cosa y no dos que se pueden desincronizar.
+model ResponsabilidadPlantilla {
+  id          String             @id @default(cuid())
+  plantillaId String
+  plantilla   PlantillaChecklist @relation(fields: [plantillaId], references: [id], onDelete: Cascade)
+
+  codigo      String
+  descripcion String
+  /// Registro del sistema de calidad que evidencia esta responsabilidad.
+  itemPlantillaId String?
+  itemPlantilla   ItemPlantilla? @relation(fields: [itemPlantillaId], references: [id], onDelete: SetNull)
+  orden       Int
+  activa      Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([plantillaId, codigo])
+  @@index([plantillaId, orden])
+}
+
+/// Copia viva de la matriz para un proyecto. Igual que el checklist: editar la
+/// plantilla maestra nunca debe alterar un proyecto en curso.
+model ResponsabilidadProyecto {
+  id         String   @id @default(cuid())
+  proyectoId String
+  proyecto   Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  responsabilidadPlantillaId String?
+
+  codigo      String
+  descripcion String
+  aplica      Boolean @default(true)
+
+  /// El responsable es una persona, no un texto: las iniciales que pide la
+  /// guía se derivan de su nombre.
+  responsableUsuarioId String?
+  responsableUsuario   Usuario? @relation("ResponsabilidadResponsable", fields: [responsableUsuarioId], references: [id], onDelete: SetNull)
+
+  /// Enlace con el checklist ya implementado: la responsabilidad apunta al
+  /// registro que la evidencia, en vez de duplicar la lista.
+  itemProyectoId String?
+  itemProyecto   ItemProyecto? @relation(fields: [itemProyectoId], references: [id], onDelete: SetNull)
+
+  /// Lo que este cliente pide en vez del estándar de la metodología.
+  requerimientoCliente String? @db.Text
+  observaciones        String? @db.Text
+  orden                Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([proyectoId, codigo])
+  @@index([proyectoId, orden])
 }
